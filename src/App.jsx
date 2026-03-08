@@ -564,9 +564,7 @@ function PageHome({ user, onNav, onSolve, solvedProblems, chartData }) {
           <div style={{ display:"flex",flexDirection:"column",gap:8 }}>
             {solvedProblems.slice(0,5).map((p,i)=>(
               <div key={p.id} style={{ display:"flex",alignItems:"center",gap:12,padding:"10px 14px",borderRadius:11,background:i===0&&solvedProblems.length>6?`${T.accent}07`:T.surfaceElevated,border:`1px solid ${i===0&&solvedProblems.length>6?T.accent+"30":T.border}`,transition:"all 0.18s",position:"relative",overflow:"hidden" }}>
-                {/* Rank */}
                 <div style={{ width:28,height:28,borderRadius:8,background:`${BAR_COLORS[i%BAR_COLORS.length]}15`,border:`1px solid ${BAR_COLORS[i%BAR_COLORS.length]}25`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:BAR_COLORS[i%BAR_COLORS.length],flexShrink:0 }}>#{i+1}</div>
-                {/* Info */}
                 <div style={{ flex:1,minWidth:0 }}>
                   <div style={{ fontSize:13,fontWeight:700,color:T.textPrimary,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",display:"flex",alignItems:"center",gap:7 }}>
                     {p.title}
@@ -579,7 +577,6 @@ function PageHome({ user, onNav, onSolve, solvedProblems, chartData }) {
                     {p.algo && <><span>·</span><span style={{ fontFamily:"'JetBrains Mono',monospace",color:T.blue,fontSize:10 }}>{p.algo}</span></>}
                   </div>
                 </div>
-                {/* Right badges */}
                 <div style={{ display:"flex",alignItems:"center",gap:6,flexShrink:0 }}>
                   <span style={{ background:diffBg[p.difficulty],color:diffColor[p.difficulty],fontSize:10,fontWeight:700,borderRadius:6,padding:"2px 8px" }}>{p.difficulty}</span>
                   <span style={{ background:T.accentDim,color:T.accent,fontSize:11,fontWeight:800,borderRadius:6,padding:"2px 9px",fontFamily:"'JetBrains Mono',monospace" }}>{p.score}%</span>
@@ -626,7 +623,6 @@ function PageHome({ user, onNav, onSolve, solvedProblems, chartData }) {
         </ResponsiveContainer>
         <div style={{ display:"flex",gap:8,marginTop:14,flexWrap:"wrap" }}>
           {solvedProblems.slice(0,4).map((p,i)=>(
-
             <div key={p.id} style={{ background:T.bg,border:`1px solid ${T.border}`,borderRadius:9,padding:"6px 11px",display:"flex",alignItems:"center",gap:7 }}>
               <div style={{ width:7,height:7,borderRadius:"50%",background:BAR_COLORS[i],boxShadow:`0 0 5px ${BAR_COLORS[i]}` }}/>
               <span style={{ fontSize:11,color:T.textSecondary,fontWeight:500 }}>{p.title.slice(0,22)}…</span>
@@ -705,27 +701,6 @@ function PageProblems({ solvedProblems, chartData }) {
 }
 
 // ─── PAGE: MENTOR (Real AI Chat) ──────────────────────────────
-const getMentorSystem = (solvedProblems) => `You are AlgoMind AI Mentor — an expert algorithms and data structures tutor specializing in competitive programming and coding interviews. You help Indian students and developers master DSA concepts.
-
-The user's profile:
-- Problems solved: ${solvedProblems.length} total
-- Average score: ${solvedProblems.length > 0 ? Math.round(solvedProblems.reduce((a,p)=>a+p.score,0)/solvedProblems.length) : 0}%
-- Weakest area: Dynamic Programming (58%)
-- Strongest area: Sorting (92%)
-- Current streak: 6 days
-- Recent problems solved: ${solvedProblems.slice(0,4).map(p=>p.title).join(', ')}
-
-Your personality:
-- Encouraging, precise, and concise
-- Use examples and analogies to explain concepts
-- Give actionable advice (specific problems to solve, patterns to study)
-- When explaining algorithms, mention time/space complexity
-- Keep responses focused and well-structured
-- Use emojis occasionally to keep tone friendly
-- Address the user as a fellow developer
-
-Always be helpful about: algorithm explanations, complexity analysis, problem-solving strategies, interview tips, roadmap suggestions, and code pattern discussions.`;
-
 const QUICK_PROMPTS = [
   { label:"📈 Improve my DP", text:"My Dynamic Programming score is 58%. What specific problems and patterns should I focus on to improve?" },
   { label:"🗺 Study roadmap",  text:"Give me a 4-week DSA study roadmap based on my current profile." },
@@ -761,43 +736,22 @@ function PageMentor({ solvedProblems }) {
     setLoading(true);
 
     try {
-     const res = await fetch("/api/chat", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    messages: newMessages.map(m => ({
-      role: m.role,
-      content: m.content
-    }))
-  })
-});
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: newMessages.map(m => ({ role: m.role, content: m.content }))
+        })
+      });
 
-const res = await fetch("/api/chat", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    messages: newMessages.map(m => ({
-      role: m.role,
-      content: m.content
-    }))
-  })
-});
+      const data = await res.json();
 
-const data = await res.json();
+      const reply =
+        data?.choices?.[0]?.message?.content ||
+        data?.reply ||
+        "Sorry, I couldn't generate a response.";
 
-const reply =
-  data?.choices?.[0]?.message?.content ||
-  data?.reply ||
-  "Sorry, I couldn't generate a response.";
-
-setMessages(prev => [
-  ...prev,
-  { role: "assistant", content: reply }
-]);
+      setMessages(prev => [...prev, { role: "assistant", content: reply }]);
     } catch {
       setMessages(prev => [...prev, { role:"assistant", content:"⚠️ Connection error. Please check your internet and try again." }]);
     }
@@ -813,7 +767,6 @@ setMessages(prev => [
     content:"Chat cleared! 🔄 Ask me anything about algorithms, data structures, or your study plan."
   }]);
 
-  // Render markdown-like bold (**text**) and line breaks
   const renderContent = (text) => {
     const parts = text.split(/(\*\*[^*]+\*\*)/g);
     return parts.map((part, i) => {
@@ -858,14 +811,12 @@ setMessages(prev => [
         <div style={{ flex:1, overflowY:"auto", padding:"18px 18px 8px", display:"flex", flexDirection:"column", gap:14 }}>
           {messages.map((m, i) => (
             <div key={i} style={{ display:"flex", gap:10, flexDirection:m.role==="user"?"row-reverse":"row", alignItems:"flex-start" }}>
-              {/* Avatar */}
               <div style={{ width:30,height:30,borderRadius:"50%",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,
                 background: m.role==="assistant" ? `linear-gradient(135deg,${T.accent},${T.blue})` : `linear-gradient(135deg,${T.violet},${T.blue})`,
                 border:`2px solid ${m.role==="assistant"?T.accent:T.violet}30`
               }}>
                 {m.role==="assistant" ? "🤖" : "👤"}
               </div>
-              {/* Bubble */}
               <div style={{
                 maxWidth:"78%", padding:"11px 15px", borderRadius:14,
                 borderTopLeftRadius:  m.role==="assistant"?4:14,
@@ -932,9 +883,8 @@ setMessages(prev => [
   );
 }
 
-
+// ─── QUIZ DATA ────────────────────────────────────────────────
 const LOCAL_QUIZ_QUESTIONS = [
-  // Arrays & Searching
   {q:"What is the time complexity of Binary Search?",a:["O(n)","O(log n)","O(n^2)","O(1)"],c:"O(log n)"},
   {q:"Worst-case time complexity of Linear Search?",a:["O(1)","O(log n)","O(n)","O(n^2)"],c:"O(n)"},
   {q:"Which technique uses two indices moving toward each other?",a:["Sliding Window","Divide & Conquer","Two Pointers","Backtracking"],c:"Two Pointers"},
@@ -945,7 +895,6 @@ const LOCAL_QUIZ_QUESTIONS = [
   {q:"Time complexity of building a prefix sum array?",a:["O(1)","O(log n)","O(n)","O(n^2)"],c:"O(n)"},
   {q:"Which data structure enables O(1) average lookup by key?",a:["Array","Linked List","Hash Map","Binary Tree"],c:"Hash Map"},
   {q:"Best sorting algorithm for nearly sorted data?",a:["Quick Sort","Merge Sort","Insertion Sort","Heap Sort"],c:"Insertion Sort"},
-  // Sorting
   {q:"Average-case time complexity of Quick Sort?",a:["O(n)","O(n log n)","O(n^2)","O(log n)"],c:"O(n log n)"},
   {q:"Which sorting algorithm is stable and has O(n log n) worst case?",a:["Quick Sort","Heap Sort","Merge Sort","Shell Sort"],c:"Merge Sort"},
   {q:"Space complexity of Merge Sort?",a:["O(1)","O(log n)","O(n)","O(n^2)"],c:"O(n)"},
@@ -956,7 +905,6 @@ const LOCAL_QUIZ_QUESTIONS = [
   {q:"Which algorithm sorts by repeatedly selecting the minimum element?",a:["Bubble Sort","Insertion Sort","Selection Sort","Shell Sort"],c:"Selection Sort"},
   {q:"Worst-case time complexity of Quick Sort?",a:["O(n log n)","O(n)","O(n^2)","O(log n)"],c:"O(n^2)"},
   {q:"Which sort is used internally by most language standard libraries?",a:["Quick Sort","Merge Sort","Tim Sort","Heap Sort"],c:"Tim Sort"},
-  // Graphs
   {q:"Which algorithm finds shortest path in an unweighted graph?",a:["DFS","Dijkstra","BFS","Bellman-Ford"],c:"BFS"},
   {q:"Which algorithm handles negative edge weights for shortest path?",a:["Dijkstra","BFS","Bellman-Ford","Floyd-Warshall"],c:"Bellman-Ford"},
   {q:"Floyd-Warshall solves which problem?",a:["Single source shortest path","All-pairs shortest path","Minimum spanning tree","Cycle detection"],c:"All-pairs shortest path"},
@@ -967,7 +915,6 @@ const LOCAL_QUIZ_QUESTIONS = [
   {q:"Time complexity of BFS/DFS on a graph with V vertices and E edges?",a:["O(V)","O(E)","O(V+E)","O(V*E)"],c:"O(V+E)"},
   {q:"Which algorithm detects cycles in a directed graph?",a:["BFS","Dijkstra","DFS with color marking","Kruskal's"],c:"DFS with color marking"},
   {q:"Kruskal's algorithm uses which data structure?",a:["Stack","Queue","Disjoint Set (Union-Find)","Min-Heap"],c:"Disjoint Set (Union-Find)"},
-  // Trees
   {q:"Height of a balanced BST with n nodes?",a:["O(n)","O(n^2)","O(log n)","O(1)"],c:"O(log n)"},
   {q:"Which BST traversal gives nodes in sorted order?",a:["Pre-order","Post-order","In-order","Level-order"],c:"In-order"},
   {q:"Time complexity of search in an AVL tree?",a:["O(n)","O(log n)","O(n log n)","O(1)"],c:"O(log n)"},
@@ -978,7 +925,6 @@ const LOCAL_QUIZ_QUESTIONS = [
   {q:"Time complexity of inserting into a Heap?",a:["O(1)","O(log n)","O(n)","O(n log n)"],c:"O(log n)"},
   {q:"A trie is primarily used for?",a:["Sorting numbers","String prefix search","Graph traversal","Shortest path"],c:"String prefix search"},
   {q:"Which traversal is used to delete a tree safely?",a:["Pre-order","In-order","Post-order","Level-order"],c:"Post-order"},
-  // Dynamic Programming
   {q:"What does DP stand for?",a:["Data Processing","Dynamic Programming","Depth Prioritization","Divide & Process"],c:"Dynamic Programming"},
   {q:"What is memoization?",a:["Sorting memory","Caching results of subproblems","Allocating heap space","Greedy selection"],c:"Caching results of subproblems"},
   {q:"Time complexity of naive recursive Fibonacci?",a:["O(n)","O(n log n)","O(2^n)","O(n^2)"],c:"O(2^n)"},
@@ -989,7 +935,6 @@ const LOCAL_QUIZ_QUESTIONS = [
   {q:"Coin Change problem is best solved with?",a:["Greedy only","Dynamic Programming","BFS only","Backtracking"],c:"Dynamic Programming"},
   {q:"Key property required for DP to be applicable?",a:["All subproblems independent","Overlapping subproblems + optimal substructure","Only greedy choices work","Sorted input required"],c:"Overlapping subproblems + optimal substructure"},
   {q:"Edit distance between two strings is computed using?",a:["Two pointers","Sliding window","Dynamic Programming","Greedy"],c:"Dynamic Programming"},
-  // Data Structures
   {q:"Which data structure follows FIFO order?",a:["Stack","Queue","Heap","Tree"],c:"Queue"},
   {q:"Which data structure follows LIFO order?",a:["Queue","Stack","Heap","Linked List"],c:"Stack"},
   {q:"Time complexity of push and pop in a stack?",a:["O(n)","O(log n)","O(1)","O(n^2)"],c:"O(1)"},
@@ -1001,6 +946,7 @@ const LOCAL_QUIZ_QUESTIONS = [
   {q:"A priority queue is typically implemented with?",a:["Stack","Linked List","Heap","Hash Map"],c:"Heap"},
   {q:"Which structure is best for implementing undo/redo functionality?",a:["Queue","Heap","Stack","Trie"],c:"Stack"},
 ];
+
 function getLocalQuiz() {
   const shuffled = [...LOCAL_QUIZ_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 5);
   return shuffled.map(q => ({
@@ -1050,8 +996,6 @@ function PageQuiz() {
       <div style={{ fontSize:12,color:T.textMuted,marginTop:5 }}>Fetching fresh questions…</div>
     </div>
   );
-
-
 
   if(done) {
     const pct = Math.round((score/questions.length)*100);
@@ -1224,7 +1168,6 @@ function SolvePage({ problem, onBack, onComplete }) {
       } else {
         setRunning(false);
         setDone(true);
-        // Build entry and notify parent
         const now = new Date();
         const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
         const dateStr = months[now.getMonth()] + " " + String(now.getDate()).padStart(2,"0");
@@ -1297,7 +1240,6 @@ function SolvePage({ problem, onBack, onComplete }) {
         {/* Results */}
         {done && (
           <>
-            {/* Algo selector tabs */}
             <div className="card" style={{ padding:"18px 20px",marginBottom:18 }}>
               <div style={{ fontSize:13,fontWeight:800,color:T.textPrimary,marginBottom:14,display:"flex",alignItems:"center",gap:8 }}><Award size={13} color={T.accent}/> Recommended Algorithms</div>
               <div style={{ display:"flex",gap:9,flexWrap:"wrap" }}>
@@ -1311,7 +1253,6 @@ function SolvePage({ problem, onBack, onComplete }) {
               </div>
             </div>
 
-            {/* Algo detail */}
             <div className="card" style={{ padding:"22px 24px",animation:"fadeUp 0.3s ease" }}>
               <div style={{ display:"flex",alignItems:"flex-start",justifyContent:"space-between",flexWrap:"wrap",gap:12,marginBottom:16 }}>
                 <div>
@@ -1404,12 +1345,10 @@ function LoginPage({ onLogin }) {
 
   return (
     <div style={{ minHeight:"100vh",background:T.bgGrad,display:"flex",alignItems:"center",justifyContent:"center",padding:24,fontFamily:"'Outfit',sans-serif",position:"relative",overflow:"hidden" }}>
-      {/* Ambient glows */}
       <div style={{ position:"absolute",top:-120,left:-120,width:400,height:400,borderRadius:"50%",background:`radial-gradient(circle,${T.accent}08,transparent 70%)`,pointerEvents:"none" }}/>
       <div style={{ position:"absolute",bottom:-80,right:-80,width:320,height:320,borderRadius:"50%",background:`radial-gradient(circle,${T.blue}06,transparent 70%)`,pointerEvents:"none" }}/>
 
       <div style={{ width:"100%",maxWidth:440,animation:"scaleIn 0.35s cubic-bezier(0.4,0,0.2,1)" }}>
-        {/* Brand header */}
         <div style={{ textAlign:"center",marginBottom:28 }}>
           <div style={{ width:52,height:52,borderRadius:16,background:`linear-gradient(135deg,${T.accent},${T.blue})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,margin:"0 auto 14px",boxShadow:`0 8px 28px ${T.accent}30`,animation:"float 3s ease-in-out infinite" }}>🧠</div>
           <div style={{ fontSize:22,fontWeight:900,color:T.textPrimary,letterSpacing:"-0.5px" }}>AlgoMind</div>
@@ -1503,7 +1442,6 @@ function Dashboard({ user, onLogout, onSolve, solvedProblems }) {
   return (
     <div style={{ minHeight:"100vh",background:T.bgGrad,fontFamily:"'Outfit',sans-serif" }}>
       <Sidebar active={activePage} onNav={setActivePage} open={sidebarOpen} onClose={()=>setSidebarOpen(false)} onLogout={onLogout} user={user}/>
-      {/* Topbar */}
       <div style={{ position:"sticky",top:0,zIndex:30,background:`${T.surface}f0`,backdropFilter:"blur(16px)",borderBottom:`1px solid ${T.border}`,padding:"0 22px",height:54,display:"flex",alignItems:"center",justifyContent:"space-between",boxShadow:"0 1px 20px rgba(0,0,0,0.08)" }}>
         <div style={{ display:"flex",alignItems:"center",gap:12 }}>
           <button className="btn-ghost" style={{ padding:"6px 9px" }} onClick={()=>setSidebarOpen(true)}><Menu size={17}/></button>
