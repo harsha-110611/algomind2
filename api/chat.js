@@ -1,7 +1,18 @@
 // api/chat.js — Vercel Serverless Function (Groq)
 
 export default async function handler(req, res) {
-  // Allow only POST requests
+
+  // Allow CORS (optional but useful)
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  // Handle preflight requests
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  // Allow only POST
   if (req.method !== "POST") {
     return res.status(405).json({
       error: "Method Not Allowed. Use POST."
@@ -12,13 +23,20 @@ export default async function handler(req, res) {
 
   if (!apiKey) {
     return res.status(500).json({
-      error: "Server configuration error: GROQ_API_KEY is missing"
+      error: "GROQ_API_KEY environment variable not configured"
     });
   }
 
   try {
-    // Safely parse request body
+
+    // Parse request body safely
     let body = req.body;
+
+    if (!body) {
+      return res.status(400).json({
+        error: "Request body missing"
+      });
+    }
 
     if (typeof body === "string") {
       body = JSON.parse(body);
@@ -26,13 +44,13 @@ export default async function handler(req, res) {
 
     const { messages } = body;
 
-    if (!messages || !Array.isArray(messages)) {
+    if (!Array.isArray(messages)) {
       return res.status(400).json({
-        error: "Invalid request: 'messages' array is required"
+        error: "Invalid request: 'messages' must be an array"
       });
     }
 
-    // Call Groq API
+    // Request to Groq
     const groqResponse = await fetch(
       "https://api.groq.com/openai/v1/chat/completions",
       {
@@ -43,8 +61,9 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           model: "llama3-70b-8192",
-          messages: messages,
-          max_tokens: 512
+          messages,
+          max_tokens: 512,
+          temperature: 0.7
         })
       }
     );
@@ -53,7 +72,7 @@ export default async function handler(req, res) {
 
     if (!groqResponse.ok) {
       return res.status(groqResponse.status).json({
-        error: "Groq API error",
+        error: "Groq API request failed",
         details: data
       });
     }
@@ -61,11 +80,13 @@ export default async function handler(req, res) {
     return res.status(200).json(data);
 
   } catch (error) {
-    console.error("Groq API request failed:", error);
+
+    console.error("Server error:", error);
 
     return res.status(500).json({
-      error: "Internal server error",
+      error: "Internal Server Error",
       details: error.message
     });
+
   }
 }
