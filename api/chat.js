@@ -1,4 +1,4 @@
-// api/chat.js — Vercel Serverless Function (Groq version)
+// api/chat.js — Vercel Serverless Function (Groq)
 
 export default async function handler(req, res) {
 
@@ -10,11 +10,16 @@ export default async function handler(req, res) {
 
   if (!apiKey) {
     return res.status(500).json({
-      error: "GROQ_API_KEY not configured on server"
+      error: "GROQ_API_KEY not configured"
     });
   }
 
   try {
+
+    // Parse body safely
+    const body = typeof req.body === "string"
+      ? JSON.parse(req.body)
+      : req.body;
 
     const response = await fetch(
       "https://api.groq.com/openai/v1/chat/completions",
@@ -24,7 +29,10 @@ export default async function handler(req, res) {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${apiKey}`
         },
-        body: JSON.stringify(req.body)
+        body: JSON.stringify({
+          model: "llama3-70b-8192",
+          messages: body.messages
+        })
       }
     );
 
@@ -38,11 +46,12 @@ export default async function handler(req, res) {
 
   } catch (error) {
 
+    console.error(error);
+
     return res.status(500).json({
-      error: "Failed to reach Groq API",
+      error: "Groq request failed",
       details: error.message
     });
 
   }
-
 }
