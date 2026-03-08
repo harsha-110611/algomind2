@@ -761,19 +761,43 @@ function PageMentor({ solvedProblems }) {
     setLoading(true);
 
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          system: getMentorSystem(solvedProblems),
-          messages: newMessages.map(m => ({ role:m.role, content:m.content })),
-        }),
-      });
-      const data = await res.json();
-      const reply = data.content?.[0]?.text || "Sorry, I couldn't generate a response. Please try again.";
-      setMessages(prev => [...prev, { role:"assistant", content:reply }]);
+     const res = await fetch("/api/chat", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    messages: newMessages.map(m => ({
+      role: m.role,
+      content: m.content
+    }))
+  })
+});
+
+const res = await fetch("/api/chat", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    messages: newMessages.map(m => ({
+      role: m.role,
+      content: m.content
+    }))
+  })
+});
+
+const data = await res.json();
+
+const reply =
+  data?.choices?.[0]?.message?.content ||
+  data?.reply ||
+  "Sorry, I couldn't generate a response.";
+
+setMessages(prev => [
+  ...prev,
+  { role: "assistant", content: reply }
+]);
     } catch {
       setMessages(prev => [...prev, { role:"assistant", content:"⚠️ Connection error. Please check your internet and try again." }]);
     }
